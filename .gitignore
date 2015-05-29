@@ -2,6 +2,8 @@
 .DS_Store
 ._*
 
+workspace/
+
 data/*
 !data/Makefile
 !data/*.sql
