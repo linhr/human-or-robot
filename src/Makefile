@@ -4,9 +4,10 @@ WORKSPACE_PATH = ../workspace
 .PHONY: all clean distclean
 
 all:
-	bash frequency.sh $(DATA_PATH) $(WORKSPACE_PATH)
+	python frequency.py
 
 clean:
+	rm -f *.pyc
 
 distclean: clean
 	rm -rf $(WORKSPACE_PATH)

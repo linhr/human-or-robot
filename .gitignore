@@ -2,6 +2,8 @@
 .DS_Store
 ._*
 
+*.py[cod]
+
 workspace/
 
 data/*
