@@ -4,11 +4,13 @@ import numpy as np
 import pandas as pd
 from sklearn.base import TransformerMixin
 from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.preprocessing import Imputer
 from sklearn.cross_validation import cross_val_score
 from sklearn.svm import SVC
 
 from bidder import *
 from features import *
+from utils import *
 
 class PipelineLogger(TransformerMixin):
     logger = logging.getLogger('prediction')
@@ -28,11 +30,18 @@ class PipelineLogger(TransformerMixin):
         return {}
 
 def create_pipeline():
+    precomputed = [
+        ('per_auction_freq', ('merchandise', 'device', 'country', 'ip', 'url'), 0.),
+    ]
+    features = []
+    for prefix, names, default in precomputed:
+        for name in names:
+            fullname = feature_fullname(name, prefix)
+            features.append((fullname, PrecomputedFeature(fullname, default=default)))
+
     pipeline = Pipeline([
-        ('features', FeatureUnion([
-            ('account', BidderFeature('payment_account')),
-            ('address', BidderFeature('address')),
-        ])),
+        ('features', FeatureUnion(features)),
+        ('imputer', Imputer(missing_values='NaN', strategy='mean', axis=0)),
         ('logger', PipelineLogger()),
         ('classifier', SVC(probability=True)),
     ])
