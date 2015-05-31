@@ -1,3 +1,5 @@
+import logging
+
 import numpy as np
 import pandas as pd
 from sklearn.base import TransformerMixin
@@ -9,16 +11,21 @@ from bidder import *
 from features import *
 
 class PipelineLogger(TransformerMixin):
+    logger = logging.getLogger('prediction')
+
     def fit(self, X, y=None):
         n, m = X.shape
         p = np.sum(y == 1.0)
-        print 'fitting %d samples (%d positive) with %d features' % (n, p, m)
+        self.logger.info('fitting %d samples (%d positive) with %d features', n, p, m)
         return self
 
     def transform(self, X):
         n, _ = X.shape
-        print 'transforming %d samples' % n
+        self.logger.info('transforming %d samples', n)
         return X
+
+    def get_params(self, deep=True):
+        return {}
 
 def create_pipeline():
     pipeline = Pipeline([
