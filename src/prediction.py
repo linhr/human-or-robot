@@ -32,6 +32,7 @@ class PipelineLogger(TransformerMixin):
 def create_pipeline():
     precomputed = [
         ('per_auction_freq', ('merchandise', 'device', 'country', 'ip', 'url'), 0.),
+        ('graph_svd', ('auction', 'merchandise', 'device', 'country', 'ip', 'url'), None),
     ]
     features = []
     for prefix, names, default in precomputed:

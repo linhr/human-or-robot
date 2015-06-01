@@ -5,7 +5,8 @@ import numpy as np
 import pandas as pd
 from sklearn.base import TransformerMixin
 
-from frequency import *
+import frequency
+import graphs
 from utils import *
 
 def feature_fullname(name, prefix=None):
@@ -71,7 +72,12 @@ class PrecomputedFeature(TransformerMixin):
 
 @save_features(('merchandise', 'device', 'country', 'ip', 'url'), 'per_auction_freq')
 def save_per_auction_freq(name, size=100):
-    return bidder_per_auction_freq(name, auction_count=size)
+    return frequency.bidder_per_auction_freq(name, auction_count=size)
+
+@save_features(('auction', 'merchandise', 'device', 'country', 'ip', 'url'), 'graph_svd')
+def save_graph_svd(name, size=100):
+    return graphs.bidder_graph_svd(name, k=size)
 
 if __name__ == '__main__':
     save_per_auction_freq()
+    save_graph_svd()
