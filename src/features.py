@@ -1,4 +1,5 @@
 import os.path
+import functools
 
 import numpy as np
 import pandas as pd
@@ -18,14 +19,19 @@ def feature_file(fullname):
     path = os.path.join('features', fullname.replace('__', os.sep) + '.csv')
     return workspace_file(path)
 
-def save_features(prefix=''):
-    """decorator to ensure the existence of feature directory"""
-    if not prefix:
-        prefix = ()
-    elif isinstance(prefix, basestring):
-        prefix = (prefix,)
-    path = os.path.join('features', *tuple(prefix))
-    return use_workspace_directory(path)
+def save_features(names=(), prefix=''):
+    if isinstance(names, basestring):
+        names = (names,)
+    def wrapper_outer(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            for name in names:
+                path = feature_file(feature_fullname(name, prefix))
+                try_makedirs(os.path.dirname(path))
+                features = func(name, *args, **kwargs)
+                features.to_csv(path, index=True, header=True)
+        return wrapper
+    return wrapper_outer
 
 class BidderFeature(TransformerMixin):
     def __init__(self, attribute):
@@ -63,12 +69,9 @@ class PrecomputedFeature(TransformerMixin):
     def get_params(self, deep=True):
         return {'name': self.name, 'default': self.default}
 
-@save_features('per_auction_freq')
-def save_per_auction_freq():
-    columns = ('merchandise', 'device', 'country', 'ip', 'url')
-    for column in columns:
-        path = feature_file(feature_fullname(column, 'per_auction_freq'))
-        bidder_per_auction_freq(column).to_csv(path, index=True, header=True)
+@save_features(('merchandise', 'device', 'country', 'ip', 'url'), 'per_auction_freq')
+def save_per_auction_freq(name, size=100):
+    return bidder_per_auction_freq(name, auction_count=size)
 
 if __name__ == '__main__':
     save_per_auction_freq()
