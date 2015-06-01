@@ -6,7 +6,7 @@ from sklearn.base import TransformerMixin
 from sklearn.pipeline import Pipeline, FeatureUnion
 from sklearn.preprocessing import Imputer
 from sklearn.cross_validation import cross_val_score
-from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
 
 from bidder import *
 from features import *
@@ -44,7 +44,7 @@ def create_pipeline():
         ('features', FeatureUnion(features)),
         ('imputer', Imputer(missing_values='NaN', strategy='mean', axis=0)),
         ('logger', PipelineLogger()),
-        ('classifier', SVC(probability=True)),
+        ('classifier', RandomForestClassifier()),
     ])
     return pipeline
 
