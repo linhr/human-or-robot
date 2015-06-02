@@ -49,9 +49,10 @@ class BidderFeature(TransformerMixin):
         return {'attribute': self.attribute}
 
 class PrecomputedFeature(TransformerMixin):
-    def __init__(self, name, default=None):
+    def __init__(self, name, default=None, limit=None):
         self.name = name
         self.default = default
+        self.limit = limit
         self._load_features()
 
     def _load_features(self):
@@ -65,10 +66,12 @@ class PrecomputedFeature(TransformerMixin):
         features = self.features.reindex(X.index).values
         if self.default is not None:
             features[np.isnan(features)] = self.default
+        if self.limit is not None:
+            features = features[:, :self.limit]
         return features
 
     def get_params(self, deep=True):
-        return {'name': self.name, 'default': self.default}
+        return {'name': self.name, 'default': self.default, 'limit': self.limit}
 
 @save_features(('merchandise', 'device', 'country', 'ip', 'url'), 'per_auction_freq')
 def save_per_auction_freq(name, size=100):

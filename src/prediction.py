@@ -31,15 +31,15 @@ class PipelineLogger(TransformerMixin):
 
 def create_pipeline():
     precomputed = [
-        ('per_auction_freq', ('merchandise', 'device', 'country', 'ip', 'url'), 0.),
-        ('graph_svd', ('auction', 'merchandise', 'device', 'country', 'ip', 'url'), None),
-        ('cooccurrence_eigen', ('auction', 'merchandise', 'device', 'country', 'ip', 'url'), None),
+        ('per_auction_freq', ('merchandise', 'device', 'country', 'ip', 'url'), 0., None),
+        ('graph_svd', ('auction', 'merchandise', 'device', 'country', 'ip', 'url'), None, None),
+        ('cooccurrence_eigen', ('auction', 'merchandise', 'device', 'country', 'ip', 'url'), None, None),
     ]
     features = []
-    for prefix, names, default in precomputed:
+    for prefix, names, default, limit in precomputed:
         for name in names:
             fullname = feature_fullname(name, prefix)
-            features.append((fullname, PrecomputedFeature(fullname, default=default)))
+            features.append((fullname, PrecomputedFeature(fullname, default=default, limit=limit)))
 
     pipeline = Pipeline([
         ('features', FeatureUnion(features)),
