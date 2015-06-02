@@ -21,3 +21,11 @@ def bidder_graph_svd(column, k=100):
     df = pd.DataFrame(data=u, index=rows)
     df.index.name = 'bidder_id'
     return df
+
+@cacheable_data_frame('cooccurrence/{column}.pickle.gz', ['bidder_id_x', 'bidder_id_y'])
+def cooccurrence_graph(column):
+    df = bidder_graph(column).reset_index().drop('weight', axis=1)
+    df = pd.merge(df, df, on=column)
+    df = df.groupby(['bidder_id_x', 'bidder_id_y']).aggregate('count')
+    df.columns = ['weight']
+    return df

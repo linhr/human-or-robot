@@ -1,5 +1,6 @@
 from __future__ import with_statement
 
+import cPickle as pickle
 import os
 import os.path
 import errno
@@ -51,13 +52,37 @@ def cacheable_data_frame(pathfmt, indexfmt):
             return [formatted(x) if isstr(x) else x for x in index_col_fmt]
         return index_col_fmt
 
-    def save_csv(df, full_path):
+    def save_data_frame(df, full_path):
         try_makedirs(os.path.dirname(full_path))
-        if full_path.lower().endswith('.gz'):
+        path_lower = full_path.lower()
+        if path_lower.endswith('.csv'):
+            with open(full_path, 'w') as output:
+                df.to_csv(output, index=True, header=True)
+        elif path_lower.endswith('.csv.gz'):
             with gzip.open(full_path, 'wb') as output:
                 df.to_csv(output, index=True, header=True)
+        elif path_lower.endswith('.pickle'):
+            with open(full_path, 'wb') as output:
+                pickle.dump(df, output, protocol=pickle.HIGHEST_PROTOCOL)
+        elif path_lower.endswith('.pickle.gz'):
+            with gzip.open(full_path, 'wb') as output:
+                pickle.dump(df, output, protocol=pickle.HIGHEST_PROTOCOL)
         else:
-            df.to_csv(full_path, index=True, header=True)
+            raise ValueError('unrecognized format')
+
+    def load_data_frame(full_path, index_col=None):
+        path_lower = full_path.lower()
+        if path_lower.endswith('.csv') or path_lower.endswith('.csv.gz'):
+            # let pandas handle gzipped csv files
+            return pd.read_csv(full_path, index_col=index_col)
+        elif path_lower.endswith('.pickle'):
+            with open(full_path, 'rb') as data:
+                return pickle.load(data)
+        elif path_lower.endswith('.pickle.gz'):
+            with gzip.open(full_path, 'rb') as data:
+                return pickle.load(data)
+        else:
+            raise ValueError('unrecognized format')
 
     def wrapper_outer(func):
         @functools.wraps(func)
@@ -66,9 +91,9 @@ def cacheable_data_frame(pathfmt, indexfmt):
             full_path = workspace_file(pathfmt.format(**fmtargs))
             if os.path.exists(full_path):
                 index_col = format_index_col(indexfmt, **fmtargs)
-                return pd.read_csv(full_path, index_col=index_col)
+                return load_data_frame(full_path, index_col=index_col)
             result = func(*args, **kwargs)
-            save_csv(result, full_path)
+            save_data_frame(result, full_path)
             return result
         return wrapper
     return wrapper_outer
