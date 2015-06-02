@@ -44,7 +44,7 @@ def create_pipeline():
         ('features', FeatureUnion(features)),
         ('imputer', Imputer(missing_values='NaN', strategy='mean', axis=0)),
         ('logger', PipelineLogger()),
-        ('classifier', RandomForestClassifier()),
+        ('classifier', RandomForestClassifier(n_estimators=100)),
     ])
     return pipeline
 
