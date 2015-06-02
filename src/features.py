@@ -78,6 +78,11 @@ def save_per_auction_freq(name, size=100):
 def save_graph_svd(name, size=100):
     return graphs.bidder_graph_svd(name, k=size)
 
+@save_features(('auction', 'merchandise', 'device', 'country', 'ip', 'url'), 'cooccurrence_eigen')
+def save_cooccurrence_eigen(name, size=100):
+    return graphs.bidder_cooccurrence_eigen(name, k=size)
+
 if __name__ == '__main__':
     save_per_auction_freq()
     save_graph_svd()
+    save_cooccurrence_eigen()

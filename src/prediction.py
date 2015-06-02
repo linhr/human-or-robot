@@ -33,6 +33,7 @@ def create_pipeline():
     precomputed = [
         ('per_auction_freq', ('merchandise', 'device', 'country', 'ip', 'url'), 0.),
         ('graph_svd', ('auction', 'merchandise', 'device', 'country', 'ip', 'url'), None),
+        ('cooccurrence_eigen', ('auction', 'merchandise', 'device', 'country', 'ip', 'url'), None),
     ]
     features = []
     for prefix, names, default in precomputed:
@@ -44,7 +45,7 @@ def create_pipeline():
         ('features', FeatureUnion(features)),
         ('imputer', Imputer(missing_values='NaN', strategy='mean', axis=0)),
         ('logger', PipelineLogger()),
-        ('classifier', RandomForestClassifier(n_estimators=100)),
+        ('classifier', RandomForestClassifier(n_estimators=150)),
     ])
     return pipeline
 
