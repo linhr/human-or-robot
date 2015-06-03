@@ -7,6 +7,7 @@ from sklearn.base import TransformerMixin
 
 import frequency
 import graphs
+import timestamp
 from utils import *
 
 def feature_fullname(name, prefix=None):
@@ -85,7 +86,17 @@ def save_graph_svd(name, size=100):
 def save_cooccurrence_eigen(name, size=100):
     return graphs.bidder_cooccurrence_eigen(name, k=size)
 
+@save_features('response_time_stats', '')
+def save_response_time_stats(name):
+    return timestamp.get_response_time_statistics()
+
+@save_features('interarrival_time_stats', '')
+def save_interarrival_time_stats(name):
+    return timestamp.get_interarrival_time_statistics()
+
 if __name__ == '__main__':
     save_per_auction_freq()
     save_graph_svd()
     save_cooccurrence_eigen()
+    save_response_time_stats()
+    save_interarrival_time_stats()
