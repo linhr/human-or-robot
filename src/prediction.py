@@ -31,6 +31,8 @@ class PipelineLogger(TransformerMixin):
 
 def create_pipeline():
     precomputed = [
+        ('', ('interarrival_time_stats',), None, None),
+        ('', ('response_time_stats',), None, None),
         ('per_auction_freq', ('merchandise', 'device', 'country', 'ip', 'url'), 0., None),
         ('graph_svd', ('auction', 'merchandise', 'device', 'country', 'ip', 'url'), None, None),
         ('cooccurrence_eigen', ('auction', 'merchandise', 'device', 'country', 'ip', 'url'), None, None),
