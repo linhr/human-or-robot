@@ -28,6 +28,7 @@ def _get_time_statistics(data_loader):
     stats = grouped.agg({
         'min': np.min,
         'max': np.max,
+        'mean': np.mean,
         'std': np.std,
     })
     # compute "normalized" percentiles
