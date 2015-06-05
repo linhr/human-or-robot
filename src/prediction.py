@@ -35,9 +35,9 @@ def create_pipeline():
         ('', ('response_time_stats',), None, None),
         ('', ('interarrival_steps_stats',), None, None),
         ('', ('bid_amounts_stats',), None, None),
-        ('per_auction_freq', ('merchandise', 'device', 'country', 'ip', 'url'), 0., None),
+#       ('per_auction_freq', ('merchandise', 'device', 'country', 'ip', 'url'), 0., None),
         ('graph_svd', ('auction', 'merchandise', 'device', 'country', 'ip', 'url'), None, None),
-        ('cooccurrence_eigen', ('auction', 'merchandise', 'device', 'country', 'ip', 'url'), None, None),
+#       ('cooccurrence_eigen', ('auction', 'merchandise', 'device', 'country', 'ip', 'url'), None, None),
     ]
     features = []
     for prefix, names, default, limit in precomputed:
@@ -49,7 +49,7 @@ def create_pipeline():
         ('features', FeatureUnion(features)),
         ('imputer', Imputer(missing_values='NaN', strategy='mean', axis=0)),
         ('logger', PipelineLogger()),
-        ('classifier', RandomForestClassifier(n_estimators=200, max_features='log2')),
+        ('classifier', RandomForestClassifier(n_estimators=200)),
     ])
     return pipeline
 
