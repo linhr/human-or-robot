@@ -94,9 +94,19 @@ def save_response_time_stats(name):
 def save_interarrival_time_stats(name):
     return timestamp.get_interarrival_time_statistics()
 
+@save_features('interarrival_steps_stats', '')
+def save_interarrival_steps_stats(name):
+    return timestamp.get_interarrival_steps_statistics()
+
+@save_features('bid_amounts_stats', '')
+def save_bid_amounts_stats(name):
+    return timestamp.get_bid_amounts_statistics()
+
 if __name__ == '__main__':
     save_per_auction_freq()
     save_graph_svd()
     save_cooccurrence_eigen()
     save_response_time_stats()
     save_interarrival_time_stats()
+    save_interarrival_steps_stats()
+    save_bid_amounts_stats()

@@ -9,8 +9,8 @@ def _get_timestamp_groups(conn):
     df = pd.read_sql(sql, conn, index_col='bidder_id')
     return df.groupby('auction')['time']
 
-def _time_delta(series):
-    return series.order().diff()
+def _time_delta(timestamps):
+    return timestamps.order().diff()
 
 def get_response_time():
     df = _get_timestamp_groups()
@@ -19,21 +19,44 @@ def get_response_time():
 
 def get_interarrival_time():
     df = _get_timestamp_groups()
-    df = df.transform(lambda x: x.groupby(level='bidder_id').transform(_time_delta))
+    df = df.transform(lambda x: x.groupby(level=0).transform(_time_delta))
     return df.dropna(how='any')
 
-def _get_time_statistics(data_loader):
+def _steps(timestamps):
+    timestamps = timestamps.order()
+    timestamps[:] = np.arange(0, len(timestamps))
+    return timestamps
+
+def _amounts(steps):
+    return steps.groupby((steps.diff() != 1).cumsum()).agg('count')
+
+def get_interarrival_steps():
+    df = _get_timestamp_groups()
+    df = df.transform(lambda x: _steps(x).groupby(level=0).transform(pd.Series.diff))
+    return df.dropna(how='any')
+
+def get_bid_amounts():
+    df = _get_timestamp_groups()
+    df = df.apply(lambda x: _steps(x).groupby(level=0).apply(_amounts))
+    df.index = df.index.droplevel(2).droplevel(0)
+    return df
+
+def _get_series_statistics(data_loader, normalize_percentiles=True):
     df = data_loader()
     grouped = df.groupby(level=0)
     stats = grouped.agg({
+        'count': np.size,
         'min': np.min,
         'max': np.max,
         'mean': np.mean,
         'std': np.std,
     })
-    # compute "normalized" percentiles
     q = np.arange(0, 100, 10)
-    percentiles = grouped.apply(lambda x: pd.Series(np.percentile(x, q) / np.max(x)))
+    if normalize_percentiles:
+        get_percentiles = lambda x: pd.Series(np.percentile(x, q) / np.max(x))
+    else:
+        get_percentiles = lambda x: pd.Series(np.percentile(x, q))
+    percentiles = grouped.apply(get_percentiles)
     percentiles = percentiles.unstack()
     percentiles.columns = ['percentile_' + str(x) for x in q]
     result = pd.concat([stats, percentiles], axis=1, join='inner')
@@ -41,7 +64,13 @@ def _get_time_statistics(data_loader):
     return result
 
 def get_response_time_statistics():
-    return _get_time_statistics(get_response_time)
+    return _get_series_statistics(get_response_time)
 
 def get_interarrival_time_statistics():
-    return _get_time_statistics(get_interarrival_time)
+    return _get_series_statistics(get_interarrival_time)
+
+def get_interarrival_steps_statistics():
+    return _get_series_statistics(get_interarrival_steps, False)
+
+def get_bid_amounts_statistics():
+    return _get_series_statistics(get_bid_amounts, False)
