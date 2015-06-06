@@ -32,15 +32,19 @@ def cooccurrence_graph(column):
     df.columns = ['weight']
     return df
 
-def bidder_cooccurrence_eigen(column, k=100):
+def _cooccurrence_adjacency_matrix(column):
     df = cooccurrence_graph(column).reset_index()
     df = df.pivot(index='bidder_id_x', columns='bidder_id_y', values='weight')
     df = df[df.index.tolist()] # ensure the order of columns
     matrix = df.values
     matrix[np.isnan(matrix)] = 0.
     matrix = sp.sparse.csr_matrix(matrix)
+    return matrix, df.index
+
+def bidder_cooccurrence_eigen(column, k=100):
+    matrix, index = _cooccurrence_adjacency_matrix(column)
     n, _ = matrix.shape
     _, v = sp.sparse.linalg.eigs(matrix, k=min(k, n-2))
-    df = pd.DataFrame(data=v.real, index=df.index)
+    df = pd.DataFrame(data=v.real, index=index)
     df.index.name = 'bidder_id'
     return df
