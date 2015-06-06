@@ -4,6 +4,32 @@ import pandas as pd
 from utils import *
 
 @use_bids_data
+def get_auction_timestamps(conn, auction=None):
+    sql = "SELECT time FROM bids"
+    if auction:
+        sql += " WHERE auction = '{0}'".format(auction)
+    df = pd.read_sql(sql, conn)
+    return df['time'].order()
+
+def get_interarrival_time_distribution(auction=None):
+    t = get_auction_timestamps(auction)
+    t = t.diff()
+    t = t.groupby(t).agg('count')
+    return t
+
+@cacheable_data_frame('misc/timestamp_stat.csv', 'key')
+def get_basic_statistics():
+    t = get_auction_timestamps()
+    d = get_interarrival_time_distribution()
+    d = d.index.values
+    df = pd.DataFrame(data=None, index=['value'])
+    df['min'] = t.min()
+    df['max'] = t.max()
+    df['resolution'] = d[d > 0].min()
+    df.index.name = 'key'
+    return df
+
+@use_bids_data
 def _get_timestamp_groups(conn):
     sql = 'SELECT bidder_id, auction, time FROM bids'
     df = pd.read_sql(sql, conn, index_col='bidder_id')
