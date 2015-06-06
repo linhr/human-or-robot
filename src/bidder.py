@@ -19,3 +19,10 @@ def get_bidders(labels=False):
     train = get_bidders_train(labels=labels)
     test = get_bidders_test(labels=labels)
     return pd.concat([train, test])
+
+def get_bot_bidders():
+    train = get_bidders_train(labels=True)
+    train.reset_index(level=0, inplace=True)
+    bots = train[train['outcome'] == 1]['bidder_id']
+    bots.index = np.arange(0, len(bots))
+    return bots
