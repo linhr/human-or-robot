@@ -43,3 +43,48 @@ def bid_count(conn, rate='1min'):
     sql = 'SELECT bidder_id, time FROM bids'
     df = pd.read_sql(sql, conn)
     return _get_time_series(df, rate, aggregator).unstack()
+
+def _entropy(series):
+    s = series.dropna().values
+    return -np.nansum(s * np.log2(s))
+
+def _auto_correlation(series, count):
+    count = max(min(count, len(series)-1), 0)
+    v = series.values
+    return np.array([np.corrcoef(v[:-i], v[i:])[0, 1] for i in xrange(1, count+1)])
+
+def _statistics_extractor(series, autocorr_count=10, named=False):
+    stats = np.array([
+        series.min(),
+        series.max(),
+        series.mean(),
+        series.std(),
+        series.kurtosis(),
+        _entropy(series),
+    ])
+    series.fillna(0, inplace=True)
+    autocorr = _auto_correlation(series, autocorr_count)
+    stats = pd.Series(np.hstack((stats, autocorr)))
+    if named:
+        names = ['min', 'max', 'mean', 'std', 'kurtosis', 'entropy']
+        for i in xrange(len(autocorr)):
+            names.append('autocorr_{0}'.format(i+1))
+        stats.index = names
+    return stats
+
+def _get_series_statistics(df):
+    # each column of the input data frame is a time series for a bidder
+    df = df.T
+    if len(df) == 0:
+        raise ValueError('empty bidder record')
+    first = df.iloc[0]
+    df = df.apply(_statistics_extractor, axis=1)
+    # use one series to determine column names
+    df.columns = _statistics_extractor(first, named=True).index.tolist()
+    return df
+
+def unique_count_statistics(column, rate='1min'):
+    return _get_series_statistics(unique_count(column, rate))
+
+def bid_count_statistics(rate='1min'):
+    return _get_series_statistics(bid_count(rate))

@@ -8,6 +8,7 @@ from sklearn.base import TransformerMixin
 import frequency
 import graphs
 import timestamp
+import timeseries
 from utils import *
 
 def feature_fullname(name, prefix=None):
@@ -102,6 +103,22 @@ def save_interarrival_steps_stats(name):
 def save_bid_amounts_stats(name):
     return timestamp.get_bid_amounts_statistics()
 
+def save_unique_count_series_stats(rate='1min'):
+    def inner(name):
+        return timeseries.unique_count_statistics(name, rate=rate)
+    names = ('auction', 'device', 'country', 'ip', 'url')
+    prefix = 'unique_count_series_stats_{0}'.format(rate)
+    wrapper = save_features(names, prefix)
+    wrapper(inner)()
+
+def save_bid_count_series_stats(rate='1min'):
+    def inner(name):
+        return timeseries.bid_count_statistics(rate=rate)
+    names = 'bid_count_series_stats_{0}'.format(rate)
+    prefix = ''
+    wrapper = save_features(names, prefix)
+    wrapper(inner)()
+
 if __name__ == '__main__':
     save_per_auction_freq()
     save_graph_svd()
@@ -110,3 +127,6 @@ if __name__ == '__main__':
     save_interarrival_time_stats()
     save_interarrival_steps_stats()
     save_bid_amounts_stats()
+    for rate in ('1min', '10min', '30min', '1h', '6h', '12h', '1d'):
+        save_unique_count_series_stats(rate)
+        save_bid_count_series_stats(rate)
