@@ -119,6 +119,22 @@ def save_bid_count_series_stats(rate='1min'):
     wrapper = save_features(names, prefix)
     wrapper(inner)()
 
+def save_series_crosscorr(rate='1min'):
+    def inner(name):
+        series = {
+            'unique_auction': lambda: timeseries.unique_count('auction', rate=rate),
+            'unique_device': lambda: timeseries.unique_count('device', rate=rate),
+            'unique_country': lambda: timeseries.unique_count('country', rate=rate),
+            'unique_ip': lambda: timeseries.unique_count('ip', rate=rate),
+            'unique_url': lambda: timeseries.unique_count('url', rate=rate),
+            'bid': lambda: timeseries.bid_count(rate=rate),
+        }
+        return timeseries.get_crosscorr(series)
+    names = 'series_crosscorr_{0}'.format(rate)
+    prefix = ''
+    wrapper = save_features(names, prefix)
+    wrapper(inner)()
+
 if __name__ == '__main__':
     save_per_auction_freq()
     save_graph_svd()
@@ -130,3 +146,4 @@ if __name__ == '__main__':
     for rate in ('1min', '10min', '30min', '1h', '6h', '12h', '1d'):
         save_unique_count_series_stats(rate)
         save_bid_count_series_stats(rate)
+        save_series_crosscorr(rate)

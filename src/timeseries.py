@@ -48,10 +48,23 @@ def _entropy(series):
     s = series.dropna().values
     return -np.nansum(s * np.log2(s))
 
+def _cross_correlation(series_x, series_y, start, end):
+    def corrcoef(a, b):
+        return np.corrcoef(a, b)[0, 1]
+
+    if len(series_x) != len(series_y):
+        raise ValueError('series length disagree')
+    length = len(series_x)
+    if start < 0:
+        raise ValueError('invalid start value')
+    end = max(min(end, length), 0)
+    u = series_x.values
+    v = series_y.values
+    corr = [corrcoef(u[0:length-i], v[i:length]) for i in xrange(start, end)]
+    return np.array(corr)
+
 def _auto_correlation(series, count):
-    count = max(min(count, len(series)-1), 0)
-    v = series.values
-    return np.array([np.corrcoef(v[:-i], v[i:])[0, 1] for i in xrange(1, count+1)])
+    return _cross_correlation(series, series, 1, count+1)
 
 def _statistics_extractor(series, autocorr_count=10, named=False):
     stats = np.array([
@@ -88,3 +101,30 @@ def unique_count_statistics(column, rate='1min'):
 
 def bid_count_statistics(rate='1min'):
     return _get_series_statistics(bid_count(rate))
+
+def _get_crosscorr_2(df1, df2, start, end):
+    result = pd.DataFrame()
+    for bidder in df1.columns:
+        try:
+            s0, s1 = df1[bidder], df2[bidder]
+        except KeyError:
+            continue
+        s0.fillna(0, inplace=True)
+        s1.fillna(0, inplace=True)
+        result[bidder] = pd.Series(_cross_correlation(s0, s1, start, end))
+    return result.T
+
+def get_crosscorr(series, start=0, end=3):
+    result = pd.DataFrame()
+    for name1, loader1 in series.iteritems():
+        df1 = loader1()
+        for name2, loader2 in series.iteritems():
+            if name1 == name2:
+                continue
+            df2 = loader2()
+            crosscorr = _get_crosscorr_2(df1, df2, start, end)
+            crosscorr.columns = ['{0}_vs_{1}_{2}'.format(name1, name2, i) \
+                for i in xrange(start, start+len(crosscorr.columns))]
+            result = pd.concat([result, crosscorr], axis=1)
+    result.index.name = 'bidder_id'
+    return result
