@@ -42,9 +42,11 @@ def create_pipeline():
     for rate in ('1min', '10min', '30min', '1h', '6h', '12h', '1d'):
         bid_count_series = 'bid_count_series_stats_{0}'.format(rate)
         unique_count_series = 'unique_count_series_stats_{0}'.format(rate)
+        series_crosscorr = 'series_crosscorr_{0}'.format(rate)
         precomputed += [
             ('', (bid_count_series,), None, None),
             (unique_count_series, ('auction', 'device', 'country', 'ip', 'url'), None, None),
+            ('', (series_crosscorr,), None, None),
         ]
 
     features = []
