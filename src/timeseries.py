@@ -15,16 +15,31 @@ def _build_time_index(df):
     df.sort_index(inplace=True)
     return df
 
+def _get_time_series(df, rate, aggregator):
+    def agg(x):
+        u = aggregator(x)
+        return u if len(u) > 0 else pd.Series()
+
+    df = _build_time_index(df)
+    df = df.groupby(pd.TimeGrouper(rate)).apply(agg)
+    return df
+
 @use_bids_data
 @cacheable_data_frame('series/unique_count_{rate}/{column}.pickle.gz', 'time')
 def unique_count(conn, column, rate='1min'):
-    def sampler(x):
-        u = x.groupby('bidder_id').apply(lambda x: x[column].nunique())
-        return u if len(u) > 0 else pd.Series()
+    def aggregator(x):
+        return x.groupby('bidder_id').apply(lambda x: x[column].nunique())
 
     sql = 'SELECT bidder_id, {0}, time FROM bids'.format(column)
     df = pd.read_sql(sql, conn)
-    df = _build_time_index(df)
-    df = df.groupby(pd.TimeGrouper(rate)).apply(sampler)
-    df = df.unstack()
-    return df
+    return _get_time_series(df, rate, aggregator).unstack()
+
+@use_bids_data
+@cacheable_data_frame('series/bid_count_{rate}.pickle.gz', 'time')
+def bid_count(conn, rate='1min'):
+    def aggregator(x):
+        return x.groupby('bidder_id').apply(lambda x: len(x))
+
+    sql = 'SELECT bidder_id, time FROM bids'
+    df = pd.read_sql(sql, conn)
+    return _get_time_series(df, rate, aggregator).unstack()
