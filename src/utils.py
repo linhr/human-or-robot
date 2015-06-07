@@ -67,6 +67,8 @@ def cacheable_data_frame(pathfmt, indexfmt):
         elif path_lower.endswith('.pickle.gz'):
             with gzip.open(full_path, 'wb') as output:
                 pickle.dump(df, output, protocol=pickle.HIGHEST_PROTOCOL)
+        elif path_lower.endswith('.h5'):
+            df.to_hdf(full_path, 'df', mode='w', complevel=1, complib='zlib')
         else:
             raise ValueError('unrecognized format')
 
@@ -81,6 +83,8 @@ def cacheable_data_frame(pathfmt, indexfmt):
         elif path_lower.endswith('.pickle.gz'):
             with gzip.open(full_path, 'rb') as data:
                 return pickle.load(data)
+        elif path_lower.endswith('.h5'):
+            return pd.read_hdf(full_path, 'df')
         else:
             raise ValueError('unrecognized format')
 

@@ -25,7 +25,7 @@ def _get_time_series(df, rate, aggregator):
     return df
 
 @use_bids_data
-@cacheable_data_frame('series/unique_count_{rate}/{column}.pickle.gz', 'time')
+@cacheable_data_frame('series/unique_count_{rate}/{column}.h5', 'time')
 def unique_count(conn, column, rate='1min'):
     def aggregator(x):
         return x.groupby('bidder_id').apply(lambda x: x[column].nunique())
@@ -35,7 +35,7 @@ def unique_count(conn, column, rate='1min'):
     return _get_time_series(df, rate, aggregator).unstack()
 
 @use_bids_data
-@cacheable_data_frame('series/bid_count_{rate}.pickle.gz', 'time')
+@cacheable_data_frame('series/bid_count_{rate}.h5', 'time')
 def bid_count(conn, rate='1min'):
     def aggregator(x):
         return x.groupby('bidder_id').apply(lambda x: len(x))
