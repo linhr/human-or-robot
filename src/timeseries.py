@@ -66,7 +66,8 @@ def _cross_correlation(series_x, series_y, start, end):
 def _auto_correlation(series, count):
     return _cross_correlation(series, series, 1, count+1)
 
-def _statistics_extractor(series, autocorr_count=10, named=False):
+def _statistics_extractor(series, autocorr_count=10, dft_peak_count=10, named=False):
+    quantiles = np.array([0, 25, 50, 75, 100])
     stats = np.array([
         series.min(),
         series.max(),
@@ -77,11 +78,19 @@ def _statistics_extractor(series, autocorr_count=10, named=False):
     ])
     series.fillna(0, inplace=True)
     autocorr = _auto_correlation(series, autocorr_count)
-    stats = pd.Series(np.hstack((stats, autocorr)))
+    dft = np.absolute(np.fft.fft(series))
+    dft = dft[:len(dft)/2]
+    dftpeaks = np.argsort(-dft)[:dft_peak_count]
+    dftquantiles = np.percentile(dft, quantiles)
+    stats = pd.Series(np.hstack((stats, autocorr, dftpeaks, dftquantiles)))
     if named:
         names = ['min', 'max', 'mean', 'std', 'kurtosis', 'entropy']
         for i in xrange(len(autocorr)):
             names.append('autocorr_{0}'.format(i+1))
+        for i in xrange(len(dftpeaks)):
+            names.append('dftpeak_{0}'.format(i))
+        for i in quantiles:
+            names.append('dftquantile_{0}'.format(i))
         stats.index = names
     return stats
 
