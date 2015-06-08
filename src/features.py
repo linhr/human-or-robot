@@ -87,6 +87,10 @@ def save_graph_svd(name, size=100):
 def save_cooccurrence_eigen(name, size=100):
     return graphs.bidder_cooccurrence_eigen(name, k=size)
 
+@save_features(('auction', 'device', 'country', 'ip', 'url'), 'attribute_weight_stats')
+def save_attribute_weight_stats(name):
+    return graphs.bid_attribute_weight_statistics(name)
+
 @save_features('response_time_stats', '')
 def save_response_time_stats(name):
     return timestamp.get_response_time_statistics()
@@ -139,6 +143,7 @@ if __name__ == '__main__':
     save_per_auction_freq()
     save_graph_svd()
     save_cooccurrence_eigen()
+    save_attribute_weight_stats()
     save_response_time_stats()
     save_interarrival_time_stats()
     save_interarrival_steps_stats()

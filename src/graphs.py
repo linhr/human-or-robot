@@ -3,6 +3,7 @@ import numpy as np
 import scipy as sp
 import scipy.sparse.linalg
 
+import frequency
 from utils import *
 
 @use_bids_data
@@ -48,3 +49,22 @@ def bidder_cooccurrence_eigen(column, k=100):
     df = pd.DataFrame(data=v.real, index=index)
     df.index.name = 'bidder_id'
     return df
+
+def bid_attribute_weight_statistics(column):
+    quantiles = np.array([25, 50, 75])
+    names = ['count', 'min', 'max', 'mean', 'std', 'kurtosis']
+    names += ['percentile_' + str(x) for x in quantiles]
+    def stats(x):
+        s = np.array([len(x), x.min(), x.max(), x.mean(), x.std(), x.kurtosis()])
+        q = np.percentile(x, quantiles)
+        return pd.Series(np.hstack([s, q]))
+
+    graph = bidder_graph(column)
+    graph.reset_index(level=1, inplace=True)
+    graph = graph.drop('weight', axis=1).dropna()
+    freq = frequency.attribute_freq(column)
+    graph = graph.join(freq, on=column, how='inner').drop(column, axis=1)
+    result = graph['n'].groupby(level=0).apply(stats).unstack()
+    result.columns = names
+    result.index.name = 'bidder_id'
+    return result
