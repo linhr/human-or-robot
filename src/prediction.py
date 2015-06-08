@@ -38,8 +38,9 @@ def create_pipeline():
         ('per_auction_freq', ('merchandise', 'device', 'country', 'ip', 'url'), 0., None),
         ('graph_svd', ('auction', 'merchandise', 'device', 'country', 'ip', 'url'), None, None),
         ('cooccurrence_eigen', ('auction', 'merchandise', 'device', 'country', 'ip', 'url'), None, None),
+        ('attribute_weight_stats', ('auction', 'device', 'country', 'ip', 'url'), None, None),
     ]
-    for rate in ('1min', '10min', '30min', '1h', '6h', '12h', '1d'):
+    for rate in ('10s', '30s', '1min', '10min', '30min', '1h', '6h', '12h', '1d'):
         bid_count_series = 'bid_count_series_stats_{0}'.format(rate)
         unique_count_series = 'unique_count_series_stats_{0}'.format(rate)
         series_crosscorr = 'series_crosscorr_{0}'.format(rate)

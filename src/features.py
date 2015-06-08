@@ -148,7 +148,7 @@ if __name__ == '__main__':
     save_interarrival_time_stats()
     save_interarrival_steps_stats()
     save_bid_amounts_stats()
-    for rate in ('1min', '10min', '30min', '1h', '6h', '12h', '1d'):
+    for rate in ('10s', '30s', '1min', '10min', '30min', '1h', '6h', '12h', '1d'):
         save_unique_count_series_stats(rate)
         save_bid_count_series_stats(rate)
         save_series_crosscorr(rate)
