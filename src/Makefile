@@ -4,7 +4,8 @@ WORKSPACE_PATH = ../workspace
 .PHONY: all clean distclean
 
 all:
-	python frequency.py
+	python features.py
+	python prediction.py
 
 clean:
 	rm -f *.pyc
