@@ -64,26 +64,26 @@ def create_pipeline():
     ])
     return pipeline
 
-def _get_training_data():
+def get_training_data():
     train = get_bidders_train(labels=True)
     labels = train['outcome'].values
     return train.drop('outcome', axis=1), labels
 
-def _get_testing_data():
+def get_testing_data():
     return get_bidders_test(labels=False)
 
 def predict():
     pipeline = create_pipeline()
-    train, labels = _get_training_data()
+    train, labels = get_training_data()
     pipeline.fit(train, labels)
-    test = _get_testing_data()
+    test = get_testing_data()
     prediction = pipeline.predict_proba(test)
     (idx,), = np.where(pipeline.classes_ == 1.)
     return pd.Series(prediction[:, idx], index=test.index, name='prediction')
 
 def cross_validation(k=10):
     pipeline = create_pipeline()
-    train, labels = _get_training_data()
+    train, labels = get_training_data()
     scores = cross_val_score(pipeline, train, labels, scoring='roc_auc', cv=k)
     return scores
 
