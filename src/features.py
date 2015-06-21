@@ -61,6 +61,9 @@ class PrecomputedFeature(TransformerMixin):
         path = feature_file(self.name)
         self.features = pd.read_csv(path, index_col='bidder_id')
 
+    def get_feature_names(self):
+        return self.features.columns.tolist()
+
     def fit(self, X, y=None):
         return self
 

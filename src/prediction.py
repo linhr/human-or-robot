@@ -1,4 +1,5 @@
 import logging
+import operator
 
 import numpy as np
 import pandas as pd
@@ -24,6 +25,18 @@ class PipelineLogger(TransformerMixin):
     def transform(self, X):
         n, _ = X.shape
         self.logger.info('transforming %d samples', n)
+        return X
+
+    def get_params(self, deep=True):
+        return {}
+
+class FeatureValidator(TransformerMixin):
+    def fit(self, X, y=None):
+        n, _ = X.shape
+        self.valid_ = np.sum(np.isnan(X), axis=0) < n
+        return self
+
+    def transform(self, X):
         return X
 
     def get_params(self, deep=True):
@@ -58,6 +71,7 @@ def create_pipeline():
 
     pipeline = Pipeline([
         ('features', FeatureUnion(features)),
+        ('validator', FeatureValidator()),
         ('imputer', Imputer(missing_values='NaN', strategy='mean', axis=0)),
         ('logger', PipelineLogger()),
         ('classifier', RandomForestClassifier(n_estimators=200, max_features='log2')),
@@ -86,6 +100,18 @@ def cross_validation(k=10):
     train, labels = get_training_data()
     scores = cross_val_score(pipeline, train, labels, scoring='roc_auc', cv=k)
     return scores
+
+def get_feature_importance():
+    pipeline = create_pipeline()
+    train, labels = get_training_data()
+    pipeline.fit(train, labels)
+    valid = pipeline.named_steps['validator'].valid_
+    names = pipeline.named_steps['features'].get_feature_names()
+    names = [names[i] for i, v in enumerate(valid) if v]
+    scores = pipeline.named_steps['classifier'].feature_importances_
+    importance = zip(names, scores)
+    importance.sort(key=operator.itemgetter(1), reverse=True)
+    return importance
 
 if __name__ == '__main__':
     prediction = predict()
