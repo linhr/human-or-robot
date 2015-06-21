@@ -6,7 +6,7 @@ from bidder import *
 from utils import *
 
 @use_bids_data
-@cacheable_data_frame('attributes/{column}.csv', '{column}')
+@cacheable_data_frame('frequencies/{column}.csv', '{column}')
 def attribute_freq(conn, column):
     sql = 'SELECT {0}, COUNT(*) AS n FROM bids GROUP BY {0}'.format(column)
     counts = pd.read_sql(sql, conn, index_col=column).sort('n')
